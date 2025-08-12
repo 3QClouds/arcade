@@ -7,7 +7,7 @@
 ### Run the following Commands in CloudShell 
 
 ```
-curl -LO raw.githubusercontent.com/andregregs/gcaf/refs/heads/main/Agustus/Level%201/Managing%20Vault%20Tokens/GSP1006.sh
+curl -LO raw.githubusercontent.com/3QClouds/arcade/refs/heads/main/Agustus/Level%201/Managing%20Vault%20Tokens/GSP1006.sh
 sudo chmod +x GSP1006.sh
 
 ./GSP1006.sh

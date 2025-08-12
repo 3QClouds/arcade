@@ -7,7 +7,7 @@
 ### Run the following Commands in CloudShell 
 
 ```
-curl -LO raw.githubusercontent.com/andregregs/gcaf/refs/heads/main/Agustus/Level%201/Cloud%20DNS%20Traffic%20Steering%20using%20Geolocation%20Policy/GSP1008.sh
+curl -LO raw.githubusercontent.com/3QClouds/arcade/refs/heads/main/Agustus/Level%201/Cloud%20DNS%20Traffic%20Steering%20using%20Geolocation%20Policy/GSP1008.sh
 sudo chmod +x GSP1008.sh
 
 ./GSP1008.sh

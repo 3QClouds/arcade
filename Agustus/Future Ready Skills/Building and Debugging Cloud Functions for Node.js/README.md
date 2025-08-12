@@ -7,7 +7,7 @@
 ### Run the following Commands in IDE 
 
 ```
-curl -LO raw.githubusercontent.com/andregregs/gcaf/refs/heads/main/Agustus/Future%20Ready%20Skills/Building%20and%20Debugging%20Cloud%20Functions%20for%20Node.js/GSP880.sh
+curl -LO raw.githubusercontent.com/3QClouds/arcade/refs/heads/main/Agustus/Future%20Ready%20Skills/Building%20and%20Debugging%20Cloud%20Functions%20for%20Node.js/GSP880.sh
 chmod +x GSP880.sh
 
 ./GSP880.sh

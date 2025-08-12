@@ -7,7 +7,7 @@
 ### Run the following Commands in CloudShell 
 
 ```
-curl -LO raw.githubusercontent.com/andregregs/gcaf/refs/heads/main/Agustus/Level%202/SAP%20Landing%20Zone%20Plan%20and%20Deploy%20the%20SAP%20Network/GSP1068.sh
+curl -LO raw.githubusercontent.com/3QClouds/arcade/refs/heads/main/Agustus/Level%202/SAP%20Landing%20Zone%20Plan%20and%20Deploy%20the%20SAP%20Network/GSP1068.sh
 sudo chmod +x GSP1068.sh
 
 ./GSP1068.sh
