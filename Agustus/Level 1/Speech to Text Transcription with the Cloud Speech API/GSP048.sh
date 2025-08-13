@@ -112,6 +112,9 @@ print_step "Step 2.1: Create Script for English Audio Processing"
 print_status "Creating script for English audio API call..."
 
 cat > prepare_english.sh <<'EOF_END'
+cd /home/$(whoami)
+echo "Working directory: $(pwd)"
+
 echo "Creating API key..."
 gcloud alpha services api-keys create --display-name="quicklab" 
 KEY=$(gcloud alpha services api-keys list --format="value(name)" --filter "displayName=quicklab")
@@ -141,6 +144,12 @@ curl -s -X POST -H "Content-Type: application/json" --data-binary @request.json 
 
 echo "English API Response:"
 cat result.json
+
+echo "Files in current directory:"
+ls -la *.json
+
+echo "Setting proper permissions..."
+chmod 644 request.json result.json
 EOF_END
 
 print_step "Step 2.2: Execute English Audio Processing on VM"
@@ -162,6 +171,9 @@ print_step "Step 3.1: Create Script for French Audio Processing"
 print_status "Creating script for French audio API call..."
 
 cat > prepare_french.sh <<'EOF_END'
+cd /home/$(whoami)
+echo "Working directory: $(pwd)"
+
 echo "Getting existing API key..."
 KEY=$(gcloud alpha services api-keys list --format="value(name)" --filter "displayName=quicklab")
 API_KEY=$(gcloud alpha services api-keys get-key-string $KEY --format="value(keyString)")
@@ -191,6 +203,12 @@ curl -s -X POST -H "Content-Type: application/json" --data-binary @request.json 
 
 echo "French API Response:"
 cat result.json
+
+echo "Files in current directory:"
+ls -la *.json
+
+echo "Setting proper permissions..."
+chmod 644 request.json result.json
 EOF_END
 
 print_step "Step 3.2: Execute French Audio Processing on VM"
