@@ -81,15 +81,66 @@ print_success "Speech-to-Text API enabled successfully!"
 print_step "Step 1.2: Create API Key"
 print_status "Creating API key for Speech-to-Text API..."
 
-# Create API key and extract the key value
-API_KEY_INFO=$(gcloud alpha services api-keys create --display-name="Speech-to-Text API Key" --format="value(name)")
-API_KEY_NAME=$(echo $API_KEY_INFO | sed 's|.*/||')
+# Create API key and extract the key value directly from the output
+API_KEY_OUTPUT=$(gcloud alpha services api-keys create --display-name="Speech-to-Text API Key" --format="json")
 
-# Get the actual API key string
-export API_KEY=$(gcloud alpha services api-keys get-key-string $API_KEY_NAME --format="value(keyString)")
+# Extract the keyString directly from the JSON output
+export API_KEY=$(echo "$API_KEY_OUTPUT" | python3 -c "
+import sys, json
+try:
+    data = json.load(sys.stdin)
+    print(data['keyString'])
+except:
+    print('')
+")
 
-echo -e "${CYAN}API Key Created: ${WHITE}$API_KEY${NC}"
-print_success "API key created successfully!"
+# If the above method fails, try alternative extraction
+if [ -z "$API_KEY" ]; then
+    print_warning "Trying alternative API key extraction method..."
+    # Extract key name and then get the key string
+    KEY_NAME=$(echo "$API_KEY_OUTPUT" | python3 -c "
+import sys, json
+try:
+    data = json.load(sys.stdin)
+    print(data['name'].split('/')[-1])
+except:
+    print('')
+")
+    
+    if [ ! -z "$KEY_NAME" ]; then
+        sleep 5  # Wait for key to be fully created
+        export API_KEY=$(gcloud alpha services api-keys get-key-string $KEY_NAME --format="value(keyString)" 2>/dev/null || echo "")
+    fi
+fi
+
+# If still no key, try listing and getting the latest one
+if [ -z "$API_KEY" ]; then
+    print_warning "Trying to get most recent API key..."
+    sleep 10  # Wait longer for propagation
+    LATEST_KEY=$(gcloud alpha services api-keys list --format="value(name)" --limit=1 --sort-by="~createTime")
+    if [ ! -z "$LATEST_KEY" ]; then
+        KEY_ID=$(echo $LATEST_KEY | sed 's|.*/||')
+        export API_KEY=$(gcloud alpha services api-keys get-key-string $KEY_ID --format="value(keyString)" 2>/dev/null || echo "")
+    fi
+fi
+
+# Final fallback - manual extraction from the visible output
+if [ -z "$API_KEY" ]; then
+    print_error "Automatic API key extraction failed."
+    echo -e "${YELLOW}Please manually copy the API key from the output above.${NC}"
+    echo -e "${YELLOW}Look for 'keyString' in the JSON output and copy the value.${NC}"
+    echo -e "${CYAN}Enter your API key manually:${NC}"
+    read -p "API Key: " API_KEY
+    export API_KEY
+fi
+
+if [ ! -z "$API_KEY" ]; then
+    echo -e "${CYAN}API Key Created: ${WHITE}$API_KEY${NC}"
+    print_success "API key created successfully!"
+else
+    print_error "Failed to extract API key. Please check the output above."
+    exit 1
+fi
 
 print_step "Step 1.3: Find VM Instance"
 print_status "Looking for linux-instance VM..."
