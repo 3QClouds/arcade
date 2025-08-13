@@ -7,8 +7,8 @@
 ### Run the following Commands in CloudShell 
 
 ```
-curl -LO raw.githubusercontent.com/3QClouds/arcade/refs/heads/main/Agustus/Level%201/Managing%20Vault%20Tokens/GSP1006.sh
-sudo chmod +x GSP1006.sh
+curl -LO raw.githubusercontent.com/3QClouds/arcade/refs/heads/main/Agustus/Level%201/Extract%2C%20Analyze%2C%20and%20Translate%20Text%20from%20Images%20with%20the%20Cloud%20ML%20APIs/GSP075.sh
+sudo chmod +x GSP075.sh
 
-./GSP1006.sh
+./GSP075.sh
 ```
