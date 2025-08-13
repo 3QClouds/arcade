@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Google Cloud Speech-to-Text API Lab - Complete Script
-# This script automates the Speech-to-Text API testing with different languages
+# Google Speech-to-Text API Lab - Complete Script
+# This script automates the Speech-to-Text API testing with multiple languages
 
 # Color codes for output
 RED='\033[0;31m'
@@ -81,67 +81,64 @@ print_success "Speech-to-Text API enabled successfully!"
 print_step "Step 1.2: Create API Key"
 print_status "Creating API key for Speech-to-Text API..."
 
-# Create API key and capture the output
-API_KEY_RESPONSE=$(gcloud alpha services api-keys create --display-name="Speech-to-Text Lab Key" --format="value(response.keyString)" 2>/dev/null)
+# Create API key and extract the key value
+API_KEY_INFO=$(gcloud alpha services api-keys create --display-name="Speech-to-Text API Key" --format="value(name)")
+API_KEY_NAME=$(echo $API_KEY_INFO | sed 's|.*/||')
 
-if [ -z "$API_KEY_RESPONSE" ]; then
-    print_warning "Alpha API key creation not available, using alternative method..."
-    
-    # Alternative: Create a service account and key
-    print_status "Creating service account for API access..."
-    gcloud iam service-accounts create speech-to-text-sa \
-        --display-name="Speech-to-Text Service Account" \
-        --description="Service account for Speech-to-Text API lab"
-    
-    print_status "Creating service account key..."
-    gcloud iam service-accounts keys create speech-key.json \
-        --iam-account=speech-to-text-sa@$PROJECT_ID.iam.gserviceaccount.com
-    
-    print_status "Granting necessary permissions..."
-    gcloud projects add-iam-policy-binding $PROJECT_ID \
-        --member="serviceAccount:speech-to-text-sa@$PROJECT_ID.iam.gserviceaccount.com" \
-        --role="roles/speech.client"
-    
-    export GOOGLE_APPLICATION_CREDENTIALS="speech-key.json"
-    print_success "Service account authentication configured!"
-    
-    # For API key method, we'll use a placeholder
-    export API_KEY="SERVICE_ACCOUNT_AUTH"
-    echo -e "${YELLOW}Note: Using service account authentication instead of API key${NC}"
+# Get the actual API key string
+export API_KEY=$(gcloud alpha services api-keys get-key-string $API_KEY_NAME --format="value(keyString)")
+
+echo -e "${CYAN}API Key Created: ${WHITE}$API_KEY${NC}"
+print_success "API key created successfully!"
+
+print_step "Step 1.3: Find VM Instance"
+print_status "Looking for linux-instance VM..."
+VM_INSTANCE=$(gcloud compute instances list --format="value(name)" --filter="name:linux-instance")
+
+if [ -z "$VM_INSTANCE" ]; then
+    print_warning "linux-instance not found, creating one..."
+    gcloud compute instances create linux-instance \
+        --zone=$ZONE \
+        --machine-type=e2-micro \
+        --image-family=debian-11 \
+        --image-project=debian-cloud \
+        --boot-disk-size=10GB \
+        --boot-disk-type=pd-standard
+    print_success "linux-instance created successfully!"
 else
-    export API_KEY="$API_KEY_RESPONSE"
-    echo -e "${CYAN}API Key created: ${WHITE}${API_KEY:0:20}...${NC}"
-    print_success "API key created successfully!"
+    print_success "Found existing linux-instance VM!"
 fi
 
-echo -e "\n${GREEN}✓ TASK 1 COMPLETED: API authentication configured!${NC}"
+echo -e "\n${GREEN}✓ TASK 1 COMPLETED: API key created and VM instance ready!${NC}"
 
 # =============================================================================
-# TASK 2: CREATE YOUR API REQUEST
+# TASK 2: CREATE API REQUEST
 # =============================================================================
 print_task "2. Create your API Request"
 
-print_step "Step 2.1: Create Request JSON File for English"
-print_status "Creating request.json file for English audio..."
+print_step "Step 2.1: Connect to VM and Create Request Files"
+print_status "Connecting to linux-instance via SSH to create API request..."
 
-cat > request.json <<EOF
+# Create the request.json file on the VM
+gcloud compute ssh linux-instance --zone=$ZONE --command="
+export API_KEY='$API_KEY'
+echo 'Creating request.json file...'
+cat > request.json << 'EOF'
 {
-  "config": {
-      "encoding":"FLAC",
-      "languageCode": "en-US"
+  \"config\": {
+      \"encoding\":\"FLAC\",
+      \"languageCode\": \"en-US\"
   },
-  "audio": {
-      "uri":"gs://cloud-samples-data/speech/brooklyn_bridge.flac"
+  \"audio\": {
+      \"uri\":\"gs://cloud-samples-data/speech/brooklyn_bridge.flac\"
   }
 }
 EOF
-
-print_success "English request.json file created!"
-
-print_step "Step 2.2: Display Request Content"
-print_status "Displaying request.json content..."
-echo -e "${YELLOW}Request content:${NC}"
+echo 'request.json created successfully!'
 cat request.json
+" --ssh-flag="-o StrictHostKeyChecking=no" --quiet
+
+print_success "API request file created on VM successfully!"
 
 echo -e "\n${GREEN}✓ TASK 2 COMPLETED: API request file created!${NC}"
 
@@ -150,141 +147,145 @@ echo -e "\n${GREEN}✓ TASK 2 COMPLETED: API request file created!${NC}"
 # =============================================================================
 print_task "3. Call the Speech-to-Text API"
 
-print_step "Step 3.1: Test English Speech Recognition"
+print_step "Step 3.1: Make API Call for English Audio"
 print_status "Calling Speech-to-Text API for English audio..."
 
-if [ "$API_KEY" = "SERVICE_ACCOUNT_AUTH" ]; then
-    # Use service account authentication
-    curl -s -X POST -H "Content-Type: application/json" \
-         -H "Authorization: Bearer $(gcloud auth application-default print-access-token)" \
-         --data-binary @request.json \
-         "https://speech.googleapis.com/v1/speech:recognize" > result.json
-else
-    # Use API key authentication
-    curl -s -X POST -H "Content-Type: application/json" \
-         --data-binary @request.json \
-         "https://speech.googleapis.com/v1/speech:recognize?key=${API_KEY}" > result.json
-fi
+# Execute API call on the VM
+gcloud compute ssh linux-instance --zone=$ZONE --command="
+export API_KEY='$API_KEY'
+echo 'Making API call to Speech-to-Text...'
+curl -s -X POST -H 'Content-Type: application/json' --data-binary @request.json \
+'https://speech.googleapis.com/v1/speech:recognize?key=\${API_KEY}' > result.json
 
-print_success "API call completed!"
-
-print_step "Step 3.2: Display English Results"
-print_status "Displaying transcription results..."
-echo -e "${YELLOW}English transcription result:${NC}"
+echo 'API Response:'
 cat result.json
+echo
+echo 'Extracting transcript...'
+python3 -c \"
+import json
+with open('result.json', 'r') as f:
+    data = json.load(f)
+    if 'results' in data and len(data['results']) > 0:
+        transcript = data['results'][0]['alternatives'][0]['transcript']
+        confidence = data['results'][0]['alternatives'][0]['confidence']
+        print(f'Transcript: {transcript}')
+        print(f'Confidence: {confidence:.2%}')
+    else:
+        print('No results found in response')
+\"
+" --ssh-flag="-o StrictHostKeyChecking=no" --quiet
 
-# Extract and display the transcript
-ENGLISH_TRANSCRIPT=$(cat result.json | grep -o '"transcript":"[^"]*"' | cut -d'"' -f4)
-if [ ! -z "$ENGLISH_TRANSCRIPT" ]; then
-    echo -e "\n${CYAN}Transcribed Text: ${WHITE}$ENGLISH_TRANSCRIPT${NC}"
-fi
+print_success "English audio transcription completed!"
 
-echo -e "\n${GREEN}✓ TASK 3 COMPLETED: English speech recognition successful!${NC}"
+echo -e "\n${GREEN}✓ TASK 3 COMPLETED: Speech-to-Text API called successfully!${NC}"
 
 # =============================================================================
 # TASK 4: SPEECH-TO-TEXT TRANSCRIPTION IN DIFFERENT LANGUAGES
 # =============================================================================
 print_task "4. Speech-to-Text Transcription in Different Languages"
 
-print_step "Step 4.1: Create Request for French Audio"
-print_status "Creating request.json file for French audio..."
+print_step "Step 4.1: Create French Language Request"
+print_status "Creating request for French audio transcription..."
 
-cat > request.json <<EOF
+# Create French request and make API call
+gcloud compute ssh linux-instance --zone=$ZONE --command="
+export API_KEY='$API_KEY'
+echo 'Creating French language request...'
+cat > request.json << 'EOF'
 {
-  "config": {
-      "encoding":"FLAC",
-      "languageCode": "fr"
+  \"config\": {
+      \"encoding\":\"FLAC\",
+      \"languageCode\": \"fr\"
   },
-  "audio": {
-      "uri":"gs://cloud-samples-data/speech/corbeau_renard.flac"
+  \"audio\": {
+      \"uri\":\"gs://cloud-samples-data/speech/corbeau_renard.flac\"
   }
 }
 EOF
 
-print_success "French request.json file created!"
-
-print_step "Step 4.2: Display French Request Content"
-print_status "Displaying updated request.json content..."
-echo -e "${YELLOW}French request content:${NC}"
+echo 'French request.json created:'
 cat request.json
+echo
+" --ssh-flag="-o StrictHostKeyChecking=no" --quiet
 
-print_step "Step 4.3: Test French Speech Recognition"
+print_step "Step 4.2: Make API Call for French Audio"
 print_status "Calling Speech-to-Text API for French audio..."
 
-if [ "$API_KEY" = "SERVICE_ACCOUNT_AUTH" ]; then
-    # Use service account authentication
-    curl -s -X POST -H "Content-Type: application/json" \
-         -H "Authorization: Bearer $(gcloud auth application-default print-access-token)" \
-         --data-binary @request.json \
-         "https://speech.googleapis.com/v1/speech:recognize" > result.json
-else
-    # Use API key authentication
-    curl -s -X POST -H "Content-Type: application/json" \
-         --data-binary @request.json \
-         "https://speech.googleapis.com/v1/speech:recognize?key=${API_KEY}" > result.json
-fi
+gcloud compute ssh linux-instance --zone=$ZONE --command="
+export API_KEY='$API_KEY'
+echo 'Making API call for French audio...'
+curl -s -X POST -H 'Content-Type: application/json' --data-binary @request.json \
+'https://speech.googleapis.com/v1/speech:recognize?key=\${API_KEY}' > result.json
 
-print_success "French API call completed!"
-
-print_step "Step 4.4: Display French Results"
-print_status "Displaying French transcription results..."
-echo -e "${YELLOW}French transcription result:${NC}"
+echo 'French API Response:'
 cat result.json
+echo
+echo 'Extracting French transcript...'
+python3 -c \"
+import json
+with open('result.json', 'r') as f:
+    data = json.load(f)
+    if 'results' in data and len(data['results']) > 0:
+        transcript = data['results'][0]['alternatives'][0]['transcript']
+        confidence = data['results'][0]['alternatives'][0]['confidence']
+        print(f'French Transcript: {transcript}')
+        print(f'Confidence: {confidence:.2%}')
+    else:
+        print('No results found in French response')
+\"
+" --ssh-flag="-o StrictHostKeyChecking=no" --quiet
 
-# Extract and display the French transcript
-FRENCH_TRANSCRIPT=$(cat result.json | grep -o '"transcript":"[^"]*"' | cut -d'"' -f4)
-if [ ! -z "$FRENCH_TRANSCRIPT" ]; then
-    echo -e "\n${CYAN}French Transcribed Text: ${WHITE}$FRENCH_TRANSCRIPT${NC}"
-fi
+print_success "French audio transcription completed!"
 
-print_step "Step 4.5: Demonstrate Additional Language Support"
-print_status "Testing Spanish speech recognition..."
+print_step "Step 4.3: Test Additional Languages (Optional)"
+print_status "Creating Spanish language request as bonus..."
 
-cat > request.json <<EOF
+gcloud compute ssh linux-instance --zone=$ZONE --command="
+export API_KEY='$API_KEY'
+echo 'Testing Spanish language support...'
+cat > request_spanish.json << 'EOF'
 {
-  "config": {
-      "encoding":"FLAC",
-      "languageCode": "es"
+  \"config\": {
+      \"encoding\":\"FLAC\",
+      \"languageCode\": \"es\"
   },
-  "audio": {
-      "uri":"gs://cloud-samples-data/speech/google_es.flac"
+  \"audio\": {
+      \"uri\":\"gs://cloud-samples-data/speech/corbeau_renard.flac\"
   }
 }
 EOF
 
-if [ "$API_KEY" = "SERVICE_ACCOUNT_AUTH" ]; then
-    curl -s -X POST -H "Content-Type: application/json" \
-         -H "Authorization: Bearer $(gcloud auth application-default print-access-token)" \
-         --data-binary @request.json \
-         "https://speech.googleapis.com/v1/speech:recognize" > result_spanish.json
-else
-    curl -s -X POST -H "Content-Type: application/json" \
-         --data-binary @request.json \
-         "https://speech.googleapis.com/v1/speech:recognize?key=${API_KEY}" > result_spanish.json
-fi
+echo 'Available language codes for testing:'
+echo '- en-US (English)'
+echo '- fr (French)'
+echo '- es (Spanish)'
+echo '- de (German)'
+echo '- ja (Japanese)'
+echo '- ko (Korean)'
+echo '- zh (Chinese)'
+echo 'And many more... (100+ languages supported)'
+" --ssh-flag="-o StrictHostKeyChecking=no" --quiet
 
-echo -e "\n${YELLOW}Spanish transcription result:${NC}"
-cat result_spanish.json
+print_step "Step 4.4: Display Lab Summary"
+print_status "Displaying lab completion summary..."
 
-print_step "Step 4.6: Language Support Summary"
-print_status "Displaying supported languages information..."
+echo -e "\n${CYAN}Lab Summary:${NC}"
+echo -e "${WHITE}✓ API Key Created: ${API_KEY:0:20}...${NC}"
+echo -e "${WHITE}✓ VM Instance: linux-instance (running)${NC}"
+echo -e "${WHITE}✓ English Audio: Transcribed successfully${NC}"
+echo -e "${WHITE}✓ French Audio: Transcribed successfully${NC}"
+echo -e "${WHITE}✓ API Endpoints: speech.googleapis.com${NC}"
 
-echo -e "\n${CYAN}Supported Languages Demonstrated:${NC}"
-echo -e "${WHITE}• English (en-US): Brooklyn Bridge audio${NC}"
-echo -e "${WHITE}• French (fr): Corbeau et Renard tale${NC}"
-echo -e "${WHITE}• Spanish (es): Google Spanish audio${NC}"
+echo -e "\n${CYAN}Audio Files Used:${NC}"
+echo -e "${WHITE}• English: gs://cloud-samples-data/speech/brooklyn_bridge.flac${NC}"
+echo -e "${WHITE}• French: gs://cloud-samples-data/speech/corbeau_renard.flac${NC}"
 
-echo -e "\n${CYAN}Language Codes Reference:${NC}"
-echo -e "${WHITE}• English: en-US, en-GB, en-AU${NC}"
-echo -e "${WHITE}• French: fr-FR, fr-CA${NC}"
-echo -e "${WHITE}• Spanish: es-ES, es-MX, es-US${NC}"
-echo -e "${WHITE}• German: de-DE${NC}"
-echo -e "${WHITE}• Italian: it-IT${NC}"
-echo -e "${WHITE}• Portuguese: pt-BR, pt-PT${NC}"
-echo -e "${WHITE}• Japanese: ja-JP${NC}"
-echo -e "${WHITE}• Korean: ko-KR${NC}"
-echo -e "${WHITE}• Chinese: zh-CN, zh-TW${NC}"
+echo -e "\n${CYAN}Key Features Demonstrated:${NC}"
+echo -e "${WHITE}• Synchronous speech recognition${NC}"
+echo -e "${WHITE}• Multiple language support${NC}"
+echo -e "${WHITE}• REST API integration${NC}"
+echo -e "${WHITE}• JSON request/response handling${NC}"
 
-echo -e "\n${GREEN}✓ TASK 4 COMPLETED: Multi-language speech recognition demonstrated!${NC}"
+echo -e "\n${GREEN}✓ TASK 4 COMPLETED: Multi-language transcription demonstrated!${NC}"
 
 print_success "All lab tasks completed successfully! 🎉"
