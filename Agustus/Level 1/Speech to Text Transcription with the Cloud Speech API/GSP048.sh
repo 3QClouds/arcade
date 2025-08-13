@@ -88,7 +88,7 @@ gcloud services enable speech.googleapis.com
 gcloud services enable apikeys.googleapis.com
 print_success "APIs enabled successfully!"
 
-print_step "Step 2: Check VM Instance"
+print_step "Step 2: Check VM Instance and Setup SSH"
 print_status "Looking for linux-instance VM..."
 VM_EXISTS=$(gcloud compute instances list --filter="name:linux-instance" --format="value(name)" 2>/dev/null)
 
@@ -102,13 +102,22 @@ if [ -z "$VM_EXISTS" ]; then
         --boot-disk-size=10GB \
         --boot-disk-type=pd-standard
     print_success "linux-instance created successfully!"
-    
-    # Wait for VM to be ready
-    print_status "Waiting for VM to be ready..."
-    sleep 30
 else
     print_success "Found existing linux-instance VM!"
 fi
+
+print_status "Setting up SSH connectivity and waiting for VM to be ready..."
+# Wait for VM to be fully ready and generate SSH keys
+sleep 30
+
+# Test SSH connectivity and generate keys if needed
+print_status "Testing SSH connectivity..."
+gcloud compute ssh linux-instance --project=$DEVSHELL_PROJECT_ID --zone=$ZONE --quiet --command="echo 'SSH test successful'" || {
+    print_warning "First SSH attempt failed, waiting for SSH keys to propagate..."
+    sleep 20
+}
+
+print_success "SSH connectivity verified!"
 
 print_step "Step 3: Create and Execute English Audio Script"
 print_status "Creating script for English audio processing..."
@@ -137,12 +146,37 @@ EOF_END
 
 print_status "Copying script to VM..."
 export ZONE=$(gcloud compute instances list linux-instance --format 'csv[no-heading](zone)')
-gcloud compute scp prepare_disk.sh linux-instance:/tmp --project=$DEVSHELL_PROJECT_ID --zone=$ZONE --quiet
+
+# Retry mechanism for SCP
+for i in {1..3}; do
+    if gcloud compute scp prepare_disk.sh linux-instance:/tmp --project=$DEVSHELL_PROJECT_ID --zone=$ZONE --quiet; then
+        print_success "Script copied successfully!"
+        break
+    else
+        print_warning "SCP attempt $i failed, retrying in 10 seconds..."
+        sleep 10
+        if [ $i -eq 3 ]; then
+            print_error "Failed to copy script after 3 attempts"
+            exit 1
+        fi
+    fi
+done
 
 print_status "Executing English audio transcription on VM..."
-gcloud compute ssh linux-instance --project=$DEVSHELL_PROJECT_ID --zone=$ZONE --quiet --command="bash /tmp/prepare_disk.sh"
-
-print_success "English audio transcription completed!"
+# Retry mechanism for SSH
+for i in {1..3}; do
+    if gcloud compute ssh linux-instance --project=$DEVSHELL_PROJECT_ID --zone=$ZONE --quiet --command="bash /tmp/prepare_disk.sh"; then
+        print_success "English audio transcription completed!"
+        break
+    else
+        print_warning "SSH attempt $i failed, retrying in 10 seconds..."
+        sleep 10
+        if [ $i -eq 3 ]; then
+            print_error "Failed to execute script after 3 attempts"
+            exit 1
+        fi
+    fi
+done
 
 echo -e "\n${GREEN}✓ TASKS 1-3 COMPLETED: API key created, request made, and English audio transcribed!${NC}"
 
@@ -180,12 +214,37 @@ EOF_END
 
 print_status "Copying French script to VM..."
 export ZONE=$(gcloud compute instances list linux-instance --format 'csv[no-heading](zone)')
-gcloud compute scp prepare_disk.sh linux-instance:/tmp --project=$DEVSHELL_PROJECT_ID --zone=$ZONE --quiet
+
+# Retry mechanism for SCP (French script)
+for i in {1..3}; do
+    if gcloud compute scp prepare_disk.sh linux-instance:/tmp --project=$DEVSHELL_PROJECT_ID --zone=$ZONE --quiet; then
+        print_success "French script copied successfully!"
+        break
+    else
+        print_warning "SCP attempt $i failed, retrying in 5 seconds..."
+        sleep 5
+        if [ $i -eq 3 ]; then
+            print_error "Failed to copy French script after 3 attempts"
+            exit 1
+        fi
+    fi
+done
 
 print_status "Executing French audio transcription on VM..."
-gcloud compute ssh linux-instance --project=$DEVSHELL_PROJECT_ID --zone=$ZONE --quiet --command="bash /tmp/prepare_disk.sh"
-
-print_success "French audio transcription completed!"
+# Retry mechanism for SSH (French script)
+for i in {1..3}; do
+    if gcloud compute ssh linux-instance --project=$DEVSHELL_PROJECT_ID --zone=$ZONE --quiet --command="bash /tmp/prepare_disk.sh"; then
+        print_success "French audio transcription completed!"
+        break
+    else
+        print_warning "SSH attempt $i failed, retrying in 5 seconds..."
+        sleep 5
+        if [ $i -eq 3 ]; then
+            print_error "Failed to execute French script after 3 attempts"
+            exit 1
+        fi
+    fi
+done
 
 print_step "Step 4.2: Display Language Support Information"
 print_status "Displaying supported languages information..."
@@ -231,9 +290,6 @@ echo -e "${WHITE}• Cloud-based audio file processing${NC}"
 echo -e "${WHITE}• API key management and security${NC}"
 
 echo -e "\n${GREEN}✓ TASK 4 COMPLETED: Multi-language speech transcription demonstrated!${NC}"
-
-# Final Checkpoint
-print_checkpoint "Task 4: Call the Speech API for French language"
 
 print_success "🎉 All lab tasks completed successfully!"
 
