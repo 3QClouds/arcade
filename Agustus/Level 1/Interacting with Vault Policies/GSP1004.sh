@@ -139,64 +139,82 @@ vault secrets list || echo -e "${GREEN}Expected: Permission denied with default 
 print_success "Task 3 completed - Policy differences demonstrated!"
 
 # =============================================================================
-# TASK 4: CREATE A POLICY (SEMI-AUTOMATED)
+# TASK 4: CREATE A POLICY (FULL MANUAL - NEW CLOUD SHELL REQUIRED)
 # =============================================================================
-print_task "4. Create a Policy (SEMI-AUTOMATED)"
+print_task "4. Create a Policy (FULL MANUAL)"
 
-print_manual "Web UI Policy Creation Required"
+print_manual "IMPORTANT: Task 4 Must Be Done Manually in NEW Cloud Shell"
 
-echo -e "${YELLOW}TASK 4 BREAKDOWN:${NC}"
-echo -e "${WHITE}• Web UI: Manual (policy creation)${NC}"
-echo -e "${WHITE}• CLI Testing: Automated${NC}"
-echo -e "${WHITE}• File Export: Automated${NC}"
+echo -e "${RED}═══════════════════════════════════════════════════════════${NC}"
+echo -e "${RED}           TASK 4 REQUIRES MANUAL COMPLETION${NC}" 
+echo -e "${RED}═══════════════════════════════════════════════════════════${NC}"
 
-print_step "Step 4.1: Manual Web UI Policy Creation"
+echo -e "\n${YELLOW}INSTRUCTIONS:${NC}"
+echo -e "${WHITE}1. KEEP THIS CLOUD SHELL RUNNING (do not close)${NC}"
+echo -e "${WHITE}2. Open a NEW Cloud Shell tab/window${NC}"
+echo -e "${WHITE}3. Complete Task 4 manually in the new shell${NC}"
+echo -e "${WHITE}4. Return here when you get green checkmark ✓${NC}"
 
-echo -e "${RED}MANUAL STEPS - Web UI Only:${NC}"
-echo -e "${WHITE}1. Click Web Preview icon → Change port to 8200${NC}"
-echo -e "${WHITE}2. Login with Root Token: ${ROOT_TOKEN}${NC}"
-echo -e "${WHITE}3. Policies → Create ACL policy → Name: demo-policy${NC}"
-echo -e "${WHITE}4. Policy content:${NC}"
+print_step "Manual Task 4 Instructions"
+
+echo -e "${CYAN}In your NEW Cloud Shell:${NC}"
+
+echo -e "\n${YELLOW}Step 1: Access Vault Web UI${NC}"
+echo -e "${WHITE}• Click Web Preview icon in Cloud Shell toolbar${NC}"
+echo -e "${WHITE}• Click 'Change port' → Set to 8200${NC}"
+echo -e "${WHITE}• Click 'Change and Preview'${NC}"
+echo -e "${WHITE}• Login with Root Token: ${ROOT_TOKEN}${NC}"
+
+echo -e "\n${YELLOW}Step 2: Create demo-policy${NC}"
+echo -e "${WHITE}• Click 'Policies' from home page${NC}"
+echo -e "${WHITE}• Click 'Create ACL policy'${NC}"
+echo -e "${WHITE}• Name: demo-policy${NC}"
+echo -e "${WHITE}• Policy content (EXACTLY):${NC}"
 
 echo -e "${GREEN}path \"sys/mounts\" {${NC}"
 echo -e "${GREEN}    capabilities = [\"read\"]${NC}"
 echo -e "${GREEN}}${NC}"
 
-echo -e "${WHITE}5. Create policy → Associate with example-user${NC}"
-echo -e "${WHITE}6. Access → userpass → example-user → Edit → Add demo-policy${NC}"
+echo -e "${WHITE}• Click 'Create policy'${NC}"
 
-echo -e "\n${YELLOW}After Web UI steps complete, press ENTER for automated testing...${NC}"
-read -r
+echo -e "\n${YELLOW}Step 3: Associate with User${NC}"
+echo -e "${WHITE}• Click 'Back to main navigation'${NC}"
+echo -e "${WHITE}• Click 'Access' → 'userpass'${NC}"
+echo -e "${WHITE}• Click ⋯ next to 'example-user' → 'Edit user'${NC}"
+echo -e "${WHITE}• Click 'Tokens' tab${NC}"
+echo -e "${WHITE}• Add 'demo-policy' to Generated Token's Policies${NC}"
+echo -e "${WHITE}• Click 'Save'${NC}"
 
-print_step "Step 4.2: Automated Initial Policy Testing"
-print_status "Testing demo-policy via CLI (automated)..."
+echo -e "\n${YELLOW}Step 4: Test in Cloud Shell${NC}"
+echo -e "${WHITE}In your NEW Cloud Shell terminal:${NC}"
 
-# Login to get new token with demo-policy
-vault login -method=userpass username=example-user password=password!
+echo -e "${GREEN}# Set Vault address${NC}"
+echo -e "${WHITE}export VAULT_ADDR='http://127.0.0.1:8200'${NC}"
 
-print_status "Testing sys/mounts access..."
-vault secrets list
+echo -e "${GREEN}# Login as example-user${NC}"
+echo -e "${WHITE}vault login -method=userpass username=example-user password=password!${NC}"
 
-CURRENT_TOKEN=$(vault print token)
-echo -e "${CYAN}Current Token: ${WHITE}$CURRENT_TOKEN${NC}"
+echo -e "${GREEN}# Test sys/mounts access (should work)${NC}"
+echo -e "${WHITE}vault secrets list${NC}"
 
-print_status "Checking sys/mounts capabilities (should show 'read')..."
-SYS_MOUNTS_RESULT=$(vault token capabilities $CURRENT_TOKEN sys/mounts)
-echo -e "${GREEN}sys/mounts: ${WHITE}$SYS_MOUNTS_RESULT${NC}"
+echo -e "${GREEN}# Get your token${NC}"
+echo -e "${WHITE}CURRENT_TOKEN=\$(vault print token)${NC}"
+echo -e "${WHITE}echo \"Token: \$CURRENT_TOKEN\"${NC}"
 
-print_status "Checking sys/policies/acl capabilities (should show 'deny')..."
-SYS_POLICIES_RESULT=$(vault token capabilities $CURRENT_TOKEN sys/policies/acl)
-echo -e "${GREEN}sys/policies/acl: ${WHITE}$SYS_POLICIES_RESULT${NC}"
+echo -e "${GREEN}# Check capabilities (should show 'read')${NC}"
+echo -e "${WHITE}vault token capabilities \$CURRENT_TOKEN sys/mounts${NC}"
 
-print_status "Testing policy list (should fail initially)..."
-vault policy list || echo -e "${GREEN}Expected: Permission denied${NC}"
+echo -e "${GREEN}# Check policies access (should show 'deny')${NC}"
+echo -e "${WHITE}vault token capabilities \$CURRENT_TOKEN sys/policies/acl${NC}"
 
-print_step "Step 4.3: Manual Policy Update"
+echo -e "${GREEN}# Try to list policies (should fail)${NC}"
+echo -e "${WHITE}vault policy list${NC}"
 
-echo -e "\n${RED}MANUAL STEP - Update Policy via Web UI:${NC}"
-echo -e "${WHITE}1. Return to Vault Web UI${NC}"
-echo -e "${WHITE}2. Policies → demo-policy → Edit policy${NC}"
-echo -e "${WHITE}3. Update to include BOTH paths:${NC}"
+echo -e "\n${YELLOW}Step 5: Update Policy${NC}"
+echo -e "${WHITE}Return to Vault Web UI:${NC}"
+echo -e "${WHITE}• Go to Policies → demo-policy${NC}"
+echo -e "${WHITE}• Click 'Edit policy'${NC}"
+echo -e "${WHITE}• Update to include BOTH paths:${NC}"
 
 echo -e "${GREEN}path \"sys/mounts\" {${NC}"
 echo -e "${GREEN}    capabilities = [\"read\"]${NC}"
@@ -206,72 +224,45 @@ echo -e "${GREEN}path \"sys/policies/acl\" {${NC}"
 echo -e "${GREEN}    capabilities = [\"read\", \"list\"]${NC}"
 echo -e "${GREEN}}${NC}"
 
-echo -e "${WHITE}4. Save policy${NC}"
+echo -e "${WHITE}• Click 'Save'${NC}"
 
-echo -e "\n${YELLOW}After updating policy in Web UI, press ENTER for automated testing...${NC}"
+echo -e "\n${YELLOW}Step 6: Test Updated Policy${NC}"
+echo -e "${WHITE}In Cloud Shell (no need to re-login):${NC}"
+
+echo -e "${GREEN}# Test policy list (should work now)${NC}"
+echo -e "${WHITE}vault policy list${NC}"
+
+echo -e "${GREEN}# Check updated capabilities (should show 'list, read')${NC}"
+echo -e "${WHITE}vault token capabilities \$CURRENT_TOKEN sys/policies/acl${NC}"
+
+echo -e "\n${YELLOW}Step 7: Create Required Files${NC}"
+echo -e "${WHITE}Create checkpoint files:${NC}"
+
+echo -e "${GREEN}# Export policy list${NC}"
+echo -e "${WHITE}vault policy list > policies.txt${NC}"
+
+echo -e "${GREEN}# Export token capabilities${NC}"
+echo -e "${WHITE}vault token capabilities \$CURRENT_TOKEN sys/policies/acl > token_capabilities.txt${NC}"
+
+echo -e "${GREEN}# Upload to Cloud Storage${NC}"
+echo -e "${WHITE}export PROJECT_ID=\$(gcloud config get-value project)${NC}"
+echo -e "${WHITE}gsutil cp *.txt gs://\$PROJECT_ID${NC}"
+
+echo -e "\n${YELLOW}Step 8: Verify Checkpoint${NC}"
+echo -e "${WHITE}• Check 'Check my progress' for green checkmark ✓${NC}"
+echo -e "${WHITE}• Should show: 'Create policies' completed${NC}"
+
+echo -e "\n${RED}═══════════════════════════════════════════════════════════${NC}"
+echo -e "${WHITE}IMPORTANT REMINDER:${NC}"
+echo -e "${WHITE}• Complete ALL steps above in NEW Cloud Shell${NC}"
+echo -e "${WHITE}• Get green checkmark ✓ for Task 4${NC}"
+echo -e "${WHITE}• Return here and press ENTER to continue${NC}"
+echo -e "${RED}═══════════════════════════════════════════════════════════${NC}"
+
+echo -e "\n${CYAN}When you've completed Task 4 manually and got the green checkmark, press ENTER...${NC}"
 read -r
 
-print_step "Step 4.4: Automated Updated Policy Testing"
-print_status "Testing updated policy (automated)..."
-
-print_status "Testing policy list access (should work now)..."
-vault policy list
-
-print_status "Checking updated sys/mounts capabilities..."
-SYS_MOUNTS_UPDATED=$(vault token capabilities $CURRENT_TOKEN sys/mounts)
-echo -e "${GREEN}sys/mounts: ${WHITE}$SYS_MOUNTS_UPDATED${NC}"
-
-print_status "Checking updated sys/policies/acl capabilities (should show 'list, read')..."
-SYS_POLICIES_UPDATED=$(vault token capabilities $CURRENT_TOKEN sys/policies/acl)
-echo -e "${GREEN}sys/policies/acl: ${WHITE}$SYS_POLICIES_UPDATED${NC}"
-
-print_step "Step 4.5: Automated File Export & Verification"
-print_status "Creating checkpoint files (automated)..."
-
-# Export policy list
-vault policy list > policies.txt
-echo -e "${CYAN}policies.txt created:${NC}"
-cat policies.txt
-
-# Export token capabilities
-vault token capabilities $CURRENT_TOKEN sys/policies/acl > token_capabilities.txt
-echo -e "${CYAN}token_capabilities.txt created:${NC}"
-cat token_capabilities.txt
-
-# Upload to Cloud Storage
-export PROJECT_ID=$(gcloud config get-value project)
-gsutil cp policies.txt gs://$PROJECT_ID
-gsutil cp token_capabilities.txt gs://$PROJECT_ID
-
-print_step "Step 4.6: Automated Output Verification"
-print_status "Verifying expected outputs..."
-
-if echo "$SYS_MOUNTS_UPDATED" | grep -q "read"; then
-    echo -e "${GREEN}✓ sys/mounts shows 'read' capability${NC}"
-else
-    echo -e "${RED}✗ sys/mounts issue: got '$SYS_MOUNTS_UPDATED'${NC}"
-fi
-
-if echo "$SYS_POLICIES_UPDATED" | grep -q "list" && echo "$SYS_POLICIES_UPDATED" | grep -q "read"; then
-    echo -e "${GREEN}✓ sys/policies/acl shows 'list, read' capabilities${NC}"
-else
-    echo -e "${RED}✗ sys/policies/acl issue: got '$SYS_POLICIES_UPDATED'${NC}"
-fi
-
-# Check if policies.txt contains demo-policy
-if grep -q "demo-policy" policies.txt; then
-    echo -e "${GREEN}✓ policies.txt contains demo-policy${NC}"
-else
-    echo -e "${RED}✗ demo-policy not found in policies.txt${NC}"
-fi
-
-print_success "Task 4 completed - demo-policy created and tested!"
-
-echo -e "\n${CYAN}Task 4 Summary:${NC}"
-echo -e "${WHITE}• Policy created via Web UI: ✓${NC}"
-echo -e "${WHITE}• CLI testing automated: ✓${NC}"
-echo -e "${WHITE}• Files exported: ✓${NC}"
-echo -e "${WHITE}• Ready for checkpoint verification${NC}"
+print_success "Task 4 completed manually! Continuing with automated tasks..."
 
 # =============================================================================
 # TASK 5: MANAGING POLICIES (AUTOMATED)
