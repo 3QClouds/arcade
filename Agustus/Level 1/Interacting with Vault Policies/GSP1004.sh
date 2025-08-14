@@ -198,12 +198,21 @@ vault secrets list
 CURRENT_TOKEN=$(vault print token)
 echo -e "${CYAN}Current Token: ${WHITE}$CURRENT_TOKEN${NC}"
 
-print_status "Checking token capabilities for sys/mounts..."
-vault token capabilities $CURRENT_TOKEN sys/mounts
+print_status "Checking token capabilities for sys/mounts (should show 'read')..."
+SYS_MOUNTS_CAPS=$(vault token capabilities $CURRENT_TOKEN sys/mounts)
+echo -e "${GREEN}sys/mounts capabilities: ${WHITE}$SYS_MOUNTS_CAPS${NC}"
 
-print_status "Testing sys/policies/acl (should fail)..."
-vault token capabilities $CURRENT_TOKEN sys/policies/acl
+print_status "Checking token capabilities for sys/policies/acl (should show 'deny')..."
+SYS_POLICIES_CAPS=$(vault token capabilities $CURRENT_TOKEN sys/policies/acl)
+echo -e "${GREEN}sys/policies/acl capabilities: ${WHITE}$SYS_POLICIES_CAPS${NC}"
+
+print_status "Testing policy list access (should fail with permission denied)..."
 vault policy list || echo -e "${GREEN}Expected: Permission denied${NC}"
+
+print_warning "Expected outputs:"
+echo -e "${WHITE}• sys/mounts capabilities: read${NC}"
+echo -e "${WHITE}• sys/policies/acl capabilities: deny${NC}"
+echo -e "${WHITE}• vault policy list: permission denied${NC}"
 
 print_step "Step 4.5: Update Policy via Web UI"
 echo -e "\n${RED}Return to Web UI to update policy:${NC}"
@@ -233,18 +242,58 @@ print_status "Testing updated policy (no new login needed)..."
 print_status "Testing policy list access (should work now)..."
 vault policy list
 
-print_status "Checking updated token capabilities..."
-vault token capabilities $CURRENT_TOKEN sys/policies/acl
+print_status "Checking updated token capabilities for sys/mounts (should still show 'read')..."
+SYS_MOUNTS_CAPS_UPDATED=$(vault token capabilities $CURRENT_TOKEN sys/mounts)
+echo -e "${GREEN}sys/mounts capabilities: ${WHITE}$SYS_MOUNTS_CAPS_UPDATED${NC}"
 
-print_step "Step 4.7: Export Results for Checkpoint"
+print_status "Checking updated token capabilities for sys/policies/acl (should now show 'list, read')..."
+SYS_POLICIES_CAPS_UPDATED=$(vault token capabilities $CURRENT_TOKEN sys/policies/acl)
+echo -e "${GREEN}sys/policies/acl capabilities: ${WHITE}$SYS_POLICIES_CAPS_UPDATED${NC}"
+
+print_warning "Expected updated outputs:"
+echo -e "${WHITE}• sys/mounts capabilities: read${NC}"
+echo -e "${WHITE}• sys/policies/acl capabilities: list, read${NC}"
+echo -e "${WHITE}• vault policy list: should list policies successfully${NC}"
+
+print_step "Step 4.7: Verify Required Outputs"
+print_status "Verifying all required outputs are present..."
+
+if echo "$SYS_MOUNTS_CAPS_UPDATED" | grep -q "read"; then
+    echo -e "${GREEN}✓ sys/mounts shows 'read' capability${NC}"
+else
+    echo -e "${RED}✗ sys/mounts capability issue${NC}"
+fi
+
+if echo "$SYS_POLICIES_CAPS_UPDATED" | grep -q "list" && echo "$SYS_POLICIES_CAPS_UPDATED" | grep -q "read"; then
+    echo -e "${GREEN}✓ sys/policies/acl shows 'list, read' capabilities${NC}"
+else
+    echo -e "${RED}✗ sys/policies/acl capability issue${NC}"
+fi
+
+print_step "Step 4.8: Export Results for Checkpoint"
 print_status "Creating required files for checkpoint..."
+
+# Export policy list
 vault policy list > policies.txt
+echo -e "${CYAN}policies.txt content:${NC}"
+cat policies.txt
+
+# Export token capabilities with actual token value
+echo "$SYS_POLICIES_CAPS_UPDATED" > token_capabilities.txt
+echo -e "${CYAN}token_capabilities.txt content:${NC}"
+cat token_capabilities.txt
+
+# Also create the exact files as mentioned in lab instructions
 vault token capabilities $CURRENT_TOKEN sys/policies/acl > token_capabilities.txt
 
 export PROJECT_ID=$(gcloud config get-value project)
-gsutil cp *.txt gs://$PROJECT_ID
+gsutil cp policies.txt gs://$PROJECT_ID
+gsutil cp token_capabilities.txt gs://$PROJECT_ID
 
 print_status "Files uploaded to Cloud Storage for verification."
+print_status "Uploaded files:"
+echo -e "${WHITE}• policies.txt - contains policy list${NC}"
+echo -e "${WHITE}• token_capabilities.txt - contains sys/policies/acl capabilities${NC}"
 
 print_success "Task 4 completed - demo-policy created via Web UI with correct configurations!"
 
