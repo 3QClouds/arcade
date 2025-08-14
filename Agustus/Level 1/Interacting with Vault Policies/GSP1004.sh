@@ -243,10 +243,12 @@ print_status "Testing policy list access (should work now)..."
 vault policy list
 
 print_status "Checking updated token capabilities for sys/mounts (should still show 'read')..."
+vault token capabilities $CURRENT_TOKEN sys/mounts
 SYS_MOUNTS_CAPS_UPDATED=$(vault token capabilities $CURRENT_TOKEN sys/mounts)
 echo -e "${GREEN}sys/mounts capabilities: ${WHITE}$SYS_MOUNTS_CAPS_UPDATED${NC}"
 
 print_status "Checking updated token capabilities for sys/policies/acl (should now show 'list, read')..."
+vault token capabilities $CURRENT_TOKEN sys/policies/acl
 SYS_POLICIES_CAPS_UPDATED=$(vault token capabilities $CURRENT_TOKEN sys/policies/acl)
 echo -e "${GREEN}sys/policies/acl capabilities: ${WHITE}$SYS_POLICIES_CAPS_UPDATED${NC}"
 
@@ -258,16 +260,21 @@ echo -e "${WHITE}• vault policy list: should list policies successfully${NC}"
 print_step "Step 4.7: Verify Required Outputs"
 print_status "Verifying all required outputs are present..."
 
+# Debug: Show what we captured
+echo -e "${CYAN}Debug - Captured values:${NC}"
+echo -e "${WHITE}SYS_MOUNTS_CAPS_UPDATED='$SYS_MOUNTS_CAPS_UPDATED'${NC}"
+echo -e "${WHITE}SYS_POLICIES_CAPS_UPDATED='$SYS_POLICIES_CAPS_UPDATED'${NC}"
+
 if echo "$SYS_MOUNTS_CAPS_UPDATED" | grep -q "read"; then
     echo -e "${GREEN}✓ sys/mounts shows 'read' capability${NC}"
 else
-    echo -e "${RED}✗ sys/mounts capability issue${NC}"
+    echo -e "${RED}✗ sys/mounts capability issue - got: '$SYS_MOUNTS_CAPS_UPDATED'${NC}"
 fi
 
 if echo "$SYS_POLICIES_CAPS_UPDATED" | grep -q "list" && echo "$SYS_POLICIES_CAPS_UPDATED" | grep -q "read"; then
     echo -e "${GREEN}✓ sys/policies/acl shows 'list, read' capabilities${NC}"
 else
-    echo -e "${RED}✗ sys/policies/acl capability issue${NC}"
+    echo -e "${RED}✗ sys/policies/acl capability issue - got: '$SYS_POLICIES_CAPS_UPDATED'${NC}"
 fi
 
 print_step "Step 4.8: Export Results for Checkpoint"
