@@ -139,176 +139,130 @@ vault secrets list || echo -e "${GREEN}Expected: Permission denied with default 
 print_success "Task 3 completed - Policy differences demonstrated!"
 
 # =============================================================================
-# TASK 4: CREATE A POLICY (MANUAL WEB UI REQUIRED)
+# TASK 4: CREATE A POLICY (FULL MANUAL - NEW CLOUD SHELL REQUIRED)
 # =============================================================================
-print_task "4. Create a Policy (MANUAL WEB UI REQUIRED)"
+print_task "4. Create a Policy (FULL MANUAL)"
 
-print_manual "IMPORTANT: This task MUST be done via Web UI"
+print_manual "IMPORTANT: Task 4 Must Be Done Manually in NEW Cloud Shell"
 
-echo -e "${RED}Lab requires Web UI workflow for policy creation!${NC}"
-echo -e "${WHITE}This cannot be automated as lab checker validates Web UI creation.${NC}"
+echo -e "${RED}═══════════════════════════════════════════════════════════${NC}"
+echo -e "${RED}           TASK 4 REQUIRES MANUAL COMPLETION${NC}" 
+echo -e "${RED}═══════════════════════════════════════════════════════════${NC}"
 
-print_step "Step 4.1: Web UI Access Instructions"
-echo -e "${YELLOW}Follow these EXACT steps:${NC}"
-echo -e "${WHITE}1. Click Web Preview icon in Cloud Shell toolbar${NC}"
-echo -e "${WHITE}2. Click 'Change port'${NC}"
-echo -e "${WHITE}3. Change Port Number to 8200${NC}"
-echo -e "${WHITE}4. Click 'Change and Preview'${NC}"
-echo -e "${WHITE}5. Login with Root Token: ${ROOT_TOKEN}${NC}"
+echo -e "\n${YELLOW}INSTRUCTIONS:${NC}"
+echo -e "${WHITE}1. KEEP THIS CLOUD SHELL RUNNING (do not close)${NC}"
+echo -e "${WHITE}2. Open a NEW Cloud Shell tab/window${NC}"
+echo -e "${WHITE}3. Complete Task 4 manually in the new shell${NC}"
+echo -e "${WHITE}4. Return here when you get green checkmark ✓${NC}"
 
-print_step "Step 4.2: Create demo-policy via Web UI"
-echo -e "${YELLOW}In Vault Web UI:${NC}"
-echo -e "${WHITE}1. Click 'Policies' from home page${NC}"
-echo -e "${WHITE}2. Click 'Create ACL policy'${NC}"
-echo -e "${WHITE}3. Name: demo-policy${NC}"
-echo -e "${WHITE}4. In Policy box, enter EXACTLY:${NC}"
+print_step "Manual Task 4 Instructions"
 
-cat <<'EOF'
-path "sys/mounts" {
-    capabilities = ["read"]
-}
-EOF
+echo -e "${CYAN}In your NEW Cloud Shell:${NC}"
 
-echo -e "${WHITE}5. Click 'Create policy'${NC}"
+echo -e "\n${YELLOW}Step 1: Access Vault Web UI${NC}"
+echo -e "${WHITE}• Click Web Preview icon in Cloud Shell toolbar${NC}"
+echo -e "${WHITE}• Click 'Change port' → Set to 8200${NC}"
+echo -e "${WHITE}• Click 'Change and Preview'${NC}"
+echo -e "${WHITE}• Login with Root Token: ${ROOT_TOKEN}${NC}"
 
-print_step "Step 4.3: Associate Policy with User"
-echo -e "${YELLOW}Still in Web UI:${NC}"
-echo -e "${WHITE}1. Click 'Back to main navigation'${NC}"
-echo -e "${WHITE}2. Click 'Access' from left pane${NC}"
-echo -e "${WHITE}3. Click 'userpass' authentication method${NC}"
-echo -e "${WHITE}4. Click three dots next to 'example-user'${NC}"
-echo -e "${WHITE}5. Select 'Edit user'${NC}"
-echo -e "${WHITE}6. Click 'Tokens' to open submenu${NC}"
-echo -e "${WHITE}7. Under 'Generated Token's Policies', add 'demo-policy'${NC}"
-echo -e "${WHITE}8. Click 'Add'${NC}"
-echo -e "${WHITE}9. Click 'Save'${NC}"
+echo -e "\n${YELLOW}Step 2: Create demo-policy${NC}"
+echo -e "${WHITE}• Click 'Policies' from home page${NC}"
+echo -e "${WHITE}• Click 'Create ACL policy'${NC}"
+echo -e "${WHITE}• Name: demo-policy${NC}"
+echo -e "${WHITE}• Policy content (EXACTLY):${NC}"
 
-echo -e "\n${YELLOW}After completing Web UI steps above, press ENTER to continue with CLI testing...${NC}"
+echo -e "${GREEN}path \"sys/mounts\" {${NC}"
+echo -e "${GREEN}    capabilities = [\"read\"]${NC}"
+echo -e "${GREEN}}${NC}"
+
+echo -e "${WHITE}• Click 'Create policy'${NC}"
+
+echo -e "\n${YELLOW}Step 3: Associate with User${NC}"
+echo -e "${WHITE}• Click 'Back to main navigation'${NC}"
+echo -e "${WHITE}• Click 'Access' → 'userpass'${NC}"
+echo -e "${WHITE}• Click ⋯ next to 'example-user' → 'Edit user'${NC}"
+echo -e "${WHITE}• Click 'Tokens' tab${NC}"
+echo -e "${WHITE}• Add 'demo-policy' to Generated Token's Policies${NC}"
+echo -e "${WHITE}• Click 'Save'${NC}"
+
+echo -e "\n${YELLOW}Step 4: Test in Cloud Shell${NC}"
+echo -e "${WHITE}In your NEW Cloud Shell terminal:${NC}"
+
+echo -e "${GREEN}# Set Vault address${NC}"
+echo -e "${WHITE}export VAULT_ADDR='http://127.0.0.1:8200'${NC}"
+
+echo -e "${GREEN}# Login as example-user${NC}"
+echo -e "${WHITE}vault login -method=userpass username=example-user password=password!${NC}"
+
+echo -e "${GREEN}# Test sys/mounts access (should work)${NC}"
+echo -e "${WHITE}vault secrets list${NC}"
+
+echo -e "${GREEN}# Get your token${NC}"
+echo -e "${WHITE}CURRENT_TOKEN=\$(vault print token)${NC}"
+echo -e "${WHITE}echo \"Token: \$CURRENT_TOKEN\"${NC}"
+
+echo -e "${GREEN}# Check capabilities (should show 'read')${NC}"
+echo -e "${WHITE}vault token capabilities \$CURRENT_TOKEN sys/mounts${NC}"
+
+echo -e "${GREEN}# Check policies access (should show 'deny')${NC}"
+echo -e "${WHITE}vault token capabilities \$CURRENT_TOKEN sys/policies/acl${NC}"
+
+echo -e "${GREEN}# Try to list policies (should fail)${NC}"
+echo -e "${WHITE}vault policy list${NC}"
+
+echo -e "\n${YELLOW}Step 5: Update Policy${NC}"
+echo -e "${WHITE}Return to Vault Web UI:${NC}"
+echo -e "${WHITE}• Go to Policies → demo-policy${NC}"
+echo -e "${WHITE}• Click 'Edit policy'${NC}"
+echo -e "${WHITE}• Update to include BOTH paths:${NC}"
+
+echo -e "${GREEN}path \"sys/mounts\" {${NC}"
+echo -e "${GREEN}    capabilities = [\"read\"]${NC}"
+echo -e "${GREEN}}${NC}"
+echo -e "${GREEN}${NC}"
+echo -e "${GREEN}path \"sys/policies/acl\" {${NC}"
+echo -e "${GREEN}    capabilities = [\"read\", \"list\"]${NC}"
+echo -e "${GREEN}}${NC}"
+
+echo -e "${WHITE}• Click 'Save'${NC}"
+
+echo -e "\n${YELLOW}Step 6: Test Updated Policy${NC}"
+echo -e "${WHITE}In Cloud Shell (no need to re-login):${NC}"
+
+echo -e "${GREEN}# Test policy list (should work now)${NC}"
+echo -e "${WHITE}vault policy list${NC}"
+
+echo -e "${GREEN}# Check updated capabilities (should show 'list, read')${NC}"
+echo -e "${WHITE}vault token capabilities \$CURRENT_TOKEN sys/policies/acl${NC}"
+
+echo -e "\n${YELLOW}Step 7: Create Required Files${NC}"
+echo -e "${WHITE}Create checkpoint files:${NC}"
+
+echo -e "${GREEN}# Export policy list${NC}"
+echo -e "${WHITE}vault policy list > policies.txt${NC}"
+
+echo -e "${GREEN}# Export token capabilities${NC}"
+echo -e "${WHITE}vault token capabilities \$CURRENT_TOKEN sys/policies/acl > token_capabilities.txt${NC}"
+
+echo -e "${GREEN}# Upload to Cloud Storage${NC}"
+echo -e "${WHITE}export PROJECT_ID=\$(gcloud config get-value project)${NC}"
+echo -e "${WHITE}gsutil cp *.txt gs://\$PROJECT_ID${NC}"
+
+echo -e "\n${YELLOW}Step 8: Verify Checkpoint${NC}"
+echo -e "${WHITE}• Check 'Check my progress' for green checkmark ✓${NC}"
+echo -e "${WHITE}• Should show: 'Create policies' completed${NC}"
+
+echo -e "\n${RED}═══════════════════════════════════════════════════════════${NC}"
+echo -e "${WHITE}IMPORTANT REMINDER:${NC}"
+echo -e "${WHITE}• Complete ALL steps above in NEW Cloud Shell${NC}"
+echo -e "${WHITE}• Get green checkmark ✓ for Task 4${NC}"
+echo -e "${WHITE}• Return here and press ENTER to continue${NC}"
+echo -e "${RED}═══════════════════════════════════════════════════════════${NC}"
+
+echo -e "\n${CYAN}When you've completed Task 4 manually and got the green checkmark, press ENTER...${NC}"
 read -r
 
-print_step "Step 4.4: Test Initial Policy (CLI)"
-print_status "Testing new token with demo-policy..."
-
-# Login to get new token with demo-policy
-vault login -method=userpass username=example-user password=password!
-
-print_status "Testing sys/mounts access (should work now)..."
-vault secrets list
-
-CURRENT_TOKEN=$(vault print token)
-echo -e "${CYAN}Current Token: ${WHITE}$CURRENT_TOKEN${NC}"
-
-print_status "Checking token capabilities for sys/mounts (should show 'read')..."
-SYS_MOUNTS_CAPS=$(vault token capabilities $CURRENT_TOKEN sys/mounts)
-echo -e "${GREEN}sys/mounts capabilities: ${WHITE}$SYS_MOUNTS_CAPS${NC}"
-
-print_status "Checking token capabilities for sys/policies/acl (should show 'deny')..."
-SYS_POLICIES_CAPS=$(vault token capabilities $CURRENT_TOKEN sys/policies/acl)
-echo -e "${GREEN}sys/policies/acl capabilities: ${WHITE}$SYS_POLICIES_CAPS${NC}"
-
-print_status "Testing policy list access (should fail with permission denied)..."
-vault policy list || echo -e "${GREEN}Expected: Permission denied${NC}"
-
-print_warning "Expected outputs:"
-echo -e "${WHITE}• sys/mounts capabilities: read${NC}"
-echo -e "${WHITE}• sys/policies/acl capabilities: deny${NC}"
-echo -e "${WHITE}• vault policy list: permission denied${NC}"
-
-print_step "Step 4.5: Update Policy via Web UI"
-echo -e "\n${RED}Return to Web UI to update policy:${NC}"
-echo -e "${WHITE}1. Go back to Vault Web UI${NC}"
-echo -e "${WHITE}2. Go to Policies > demo-policy${NC}"
-echo -e "${WHITE}3. Click 'Edit policy'${NC}"
-echo -e "${WHITE}4. Update policy to include BOTH paths:${NC}"
-
-cat <<'EOF'
-path "sys/mounts" {
-    capabilities = ["read"]
-}
-
-path "sys/policies/acl" {
-    capabilities = ["read", "list"]
-}
-EOF
-
-echo -e "${WHITE}5. Click 'Save'${NC}"
-
-echo -e "\n${YELLOW}After updating policy in Web UI, press ENTER to continue with final testing...${NC}"
-read -r
-
-print_step "Step 4.6: Test Updated Policy (CLI)"
-print_status "Testing updated policy (no new login needed)..."
-
-print_status "Testing policy list access (should work now)..."
-vault policy list
-
-print_status "Checking updated token capabilities for sys/mounts (should still show 'read')..."
-vault token capabilities $CURRENT_TOKEN sys/mounts
-SYS_MOUNTS_CAPS_UPDATED=$(vault token capabilities $CURRENT_TOKEN sys/mounts)
-echo -e "${GREEN}sys/mounts capabilities: ${WHITE}$SYS_MOUNTS_CAPS_UPDATED${NC}"
-
-print_status "Checking updated token capabilities for sys/policies/acl (should now show 'list, read')..."
-vault token capabilities $CURRENT_TOKEN sys/policies/acl
-SYS_POLICIES_CAPS_UPDATED=$(vault token capabilities $CURRENT_TOKEN sys/policies/acl)
-echo -e "${GREEN}sys/policies/acl capabilities: ${WHITE}$SYS_POLICIES_CAPS_UPDATED${NC}"
-
-print_warning "Expected updated outputs:"
-echo -e "${WHITE}• sys/mounts capabilities: read${NC}"
-echo -e "${WHITE}• sys/policies/acl capabilities: list, read${NC}"
-echo -e "${WHITE}• vault policy list: should list policies successfully${NC}"
-
-print_step "Step 4.7: Verify Required Outputs"
-print_status "Verifying all required outputs are present..."
-
-# Debug: Show what we captured
-echo -e "${CYAN}Debug - Captured values:${NC}"
-echo -e "${WHITE}SYS_MOUNTS_CAPS_UPDATED='$SYS_MOUNTS_CAPS_UPDATED'${NC}"
-echo -e "${WHITE}SYS_POLICIES_CAPS_UPDATED='$SYS_POLICIES_CAPS_UPDATED'${NC}"
-
-if echo "$SYS_MOUNTS_CAPS_UPDATED" | grep -q "read"; then
-    echo -e "${GREEN}✓ sys/mounts shows 'read' capability${NC}"
-else
-    echo -e "${RED}✗ sys/mounts capability issue - got: '$SYS_MOUNTS_CAPS_UPDATED'${NC}"
-fi
-
-if echo "$SYS_POLICIES_CAPS_UPDATED" | grep -q "list" && echo "$SYS_POLICIES_CAPS_UPDATED" | grep -q "read"; then
-    echo -e "${GREEN}✓ sys/policies/acl shows 'list, read' capabilities${NC}"
-else
-    echo -e "${RED}✗ sys/policies/acl capability issue - got: '$SYS_POLICIES_CAPS_UPDATED'${NC}"
-fi
-
-print_step "Step 4.8: Export Results for Checkpoint"
-print_status "Creating required files for checkpoint..."
-
-# Export policy list
-vault policy list > policies.txt
-echo -e "${CYAN}policies.txt content:${NC}"
-cat policies.txt
-
-# Export token capabilities with actual token value
-echo "$SYS_POLICIES_CAPS_UPDATED" > token_capabilities.txt
-echo -e "${CYAN}token_capabilities.txt content:${NC}"
-cat token_capabilities.txt
-
-# Also create the exact files as mentioned in lab instructions
-vault token capabilities $CURRENT_TOKEN sys/policies/acl > token_capabilities.txt
-
-export PROJECT_ID=$(gcloud config get-value project)
-gsutil cp policies.txt gs://$PROJECT_ID
-gsutil cp token_capabilities.txt gs://$PROJECT_ID
-
-print_status "Files uploaded to Cloud Storage for verification."
-print_status "Uploaded files:"
-echo -e "${WHITE}• policies.txt - contains policy list${NC}"
-echo -e "${WHITE}• token_capabilities.txt - contains sys/policies/acl capabilities${NC}"
-
-print_success "Task 4 completed - demo-policy created via Web UI with correct configurations!"
-
-echo -e "\n${YELLOW}Important Notes:${NC}"
-echo -e "${WHITE}• Policy must be created via Web UI (not CLI) for lab validation${NC}"
-echo -e "${WHITE}• Both sys/mounts and sys/policies/acl paths must be included${NC}"
-echo -e "${WHITE}• Policy must be associated with example-user${NC}"
-echo -e "${WHITE}• Files exported to Cloud Storage for checkpoint verification${NC}"
+print_success "Task 4 completed manually! Continuing with automated tasks..."
 
 # =============================================================================
 # TASK 5: MANAGING POLICIES (AUTOMATED)
