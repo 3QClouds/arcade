@@ -7,8 +7,8 @@
 ### Run the following Commands in CloudShell 
 
 ```
-curl -LO raw.githubusercontent.com/3QClouds/arcade/refs/heads/main/Agustus/Level%201/Managing%20Vault%20Tokens/GSP1006.sh
-sudo chmod +x GSP1006.sh
+curl -LO raw.githubusercontent.com/3QClouds/arcade/refs/heads/main/Agustus/Level%201/Interacting%20with%20Vault%20Policies/GSP1004.sh
+sudo chmod +x GSP1004.sh
 
-./GSP1006.sh
+./GSP1004.sh
 ```
