@@ -7,8 +7,8 @@
 ### Run the following Commands in CloudShell 
 
 ```
-curl -LO raw.githubusercontent.com/3QClouds/arcade/refs/heads/main/Agustus/Level%203/Terraform%20Essentials%20Cloud%20Firestore%20Database/gem-terraform-firestore-create.sh
-sudo chmod +x gem-terraform-firestore-create.sh
+curl -LO raw.githubusercontent.com/3QClouds/arcade/refs/heads/main/Agustus/Level%203/Terraform%20Essentials%20Google%20Compute%20Engine%20Instance/gem-terraform-gce-create.sh
+sudo chmod +x gem-terraform-gce-create.sh
 
-./gem-terraform-firestore-create.sh
+./gem-terraform-gce-create.sh
 ```
