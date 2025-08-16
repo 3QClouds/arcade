@@ -7,8 +7,8 @@
 ### Run the following Commands in CloudShell 
 
 ```
-curl -LO raw.githubusercontent.com/3QClouds/arcade/refs/heads/main/Agustus/Level%202/Dataproc%20Qwik%20Start%20-%20Command%20Line/GSP104.sh
-sudo chmod +x GSP104.sh
+curl -LO raw.githubusercontent.com/3QClouds/arcade/refs/heads/main/Agustus/Level%203/Terraform%20Essentials%20Cloud%20Firestore%20Database/gem-terraform-firestore-create.sh
+sudo chmod +x gem-terraform-firestore-create.sh
 
-./GSP104.sh
+./gem-terraform-firestore-create.sh
 ```
