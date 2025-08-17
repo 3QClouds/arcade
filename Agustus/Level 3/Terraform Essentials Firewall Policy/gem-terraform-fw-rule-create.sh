@@ -281,28 +281,4 @@ print_warning "You can manually remove it with: rm -rf terraform-firewall/"
 
 echo -e "\n${GREEN}✓ TASK 5 COMPLETED: Resources cleaned up successfully!${NC}"
 
-# =============================================================================
-# SUMMARY
-# =============================================================================
-print_step "Lab Summary"
-
-echo -e "\n${CYAN}What was accomplished:${NC}"
-echo -e "${WHITE}• Project Configuration: Set project, region, and zone${NC}"
-echo -e "${WHITE}• Terraform State Bucket: Created gs://$PROJECT_ID-tf-state${NC}"
-echo -e "${WHITE}• Terraform Configuration: Defined firewall rule${NC}"
-echo -e "${WHITE}• Infrastructure Deployment: Applied Terraform configuration${NC}"
-echo -e "${WHITE}• Resource Cleanup: Destroyed created resources${NC}"
-
-echo -e "\n${CYAN}Files Created:${NC}"
-echo -e "${WHITE}• terraform-firewall/main.tf - Provider configuration${NC}"
-echo -e "${WHITE}• terraform-firewall/firewall.tf - Firewall rule definition${NC}"
-echo -e "${WHITE}• terraform-firewall/variables.tf - Variable definitions${NC}"
-echo -e "${WHITE}• terraform-firewall/outputs.tf - Output definitions${NC}"
-
-echo -e "\n${CYAN}Key Terraform Commands Used:${NC}"
-echo -e "${WHITE}• terraform init - Initialize provider${NC}"
-echo -e "${WHITE}• terraform plan - Preview changes${NC}"
-echo -e "${WHITE}• terraform apply - Create resources${NC}"
-echo -e "${WHITE}• terraform destroy - Remove resources${NC}"
-
 print_success "All lab tasks completed successfully! 🎉"
