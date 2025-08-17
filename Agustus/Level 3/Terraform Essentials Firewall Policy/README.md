@@ -7,8 +7,8 @@
 ### Run the following Commands in CloudShell 
 
 ```
-curl -LO raw.githubusercontent.com/3QClouds/arcade/refs/heads/main/Agustus/Level%203/Terraform%20Essentials%20Service%20Account/gem-terraform-sa-create.sh
-sudo chmod +x gem-terraform-sa-create.sh
+curl -LO raw.githubusercontent.com/3QClouds/arcade/refs/heads/main/Agustus/Level%203/Terraform%20Essentials%20Firewall%20Policy/gem-terraform-fw-rule-create.sh
+sudo chmod +x gem-terraform-fw-rule-create.sh
 
-./gem-terraform-sa-create.sh
+./gem-terraform-fw-rule-create.sh
 ```
