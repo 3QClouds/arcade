@@ -109,11 +109,14 @@ print_success "Subnet with Flow Logs created successfully!"
 print_step "Step 1.4: Create Firewall Rule"
 print_status "Creating firewall rule 'allow-http-ssh'..."
 gcloud compute firewall-rules create allow-http-ssh \
+    --project=$PROJECT_ID \
+    --direction=INGRESS \
+    --priority=1000 \
     --network=vpc-net \
-    --allow=tcp:80,tcp:22 \
+    --action=ALLOW \
+    --rules=tcp:80,tcp:22 \
     --source-ranges=0.0.0.0/0 \
-    --target-tags=http-server \
-    --description="Allow HTTP and SSH traffic"
+    --target-tags=http-server
 
 print_success "Firewall rule created successfully!"
 
