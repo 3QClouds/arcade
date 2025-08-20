@@ -16,8 +16,8 @@
 ### Run the following Commands in CloudShell 
 
 ```
-curl -LO raw.githubusercontent.com/3QClouds/arcade/refs/heads/main/Agustus/Future%20Ready%20Skills/APIs%20Explorer%20Cloud%20SQL/GSP423.sh
-sudo chmod +x GSP423.sh
+curl -LO raw.githubusercontent.com/3QClouds/arcade/refs/heads/main/Agustus/Certification%20Zone/VPC%20Flow%20Logs%20-%20Analyzing%20Network%20Traffic/GSP212.sh
+sudo chmod +x GSP212.sh
 
-./GSP423.sh
+./GSP212.sh
 ```
